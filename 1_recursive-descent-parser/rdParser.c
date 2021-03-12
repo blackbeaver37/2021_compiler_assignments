@@ -30,20 +30,20 @@ void error(int errNo)
     {
         printf("\b");
         printf(ERROR_TEXT_COLOR "%c\n", ch);
-        printf("잘못된 위치의 토큰이 존재합니다.\n");
+        printf("Wrong Token Exist\n");
     }
     else if (errNo == PARENTHESES_ERROR)
-        printf(ERROR_TEXT_COLOR "괄호가 정확히 닫히지 않았습니다.\n");
+        printf(ERROR_TEXT_COLOR "Parentheses Missing\n");
     else if (errNo == DIVIDE_BY_ZERO_ERROR)
     {
         printf("\b");
         printf(ERROR_TEXT_COLOR "%c\n", ch);
-        printf("0으로는 나눌 수 없습니다.\n");
+        printf("Can Not Divide By Zero\n");
     }
     else if (errNo == INVALID_END_ERROR)
-        printf(ERROR_TEXT_COLOR "문장이 정확히 끝나지 않았습니다.\n");
+        printf(ERROR_TEXT_COLOR "Not Full Sentence\n");
 
-    printf("완벽하지 않은 문장입니다.\n" NORMAL_TEXT_COLOR);
+    printf("Wrong Sentence!\n" NORMAL_TEXT_COLOR);
     exit(0);
 }
 
@@ -135,5 +135,5 @@ void main()
     expression();
     if (token != END)
         error(INVALID_END_ERROR);
-    printf("완벽한 문장입니다.\n");
+    printf("Right Sentence!\n");
 }
