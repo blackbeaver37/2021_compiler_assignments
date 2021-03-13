@@ -1,16 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// Text Colors
 #define NORMAL_TEXT_COLOR "\x1b[0m"
 #define ERROR_TEXT_COLOR "\x1b[31m"
 
+// Error Codes
 #define SEQUENCE_ERROR 1
 #define PARENTHESES_ERROR 2
-#define DIVIDE_BY_ZERO_ERROR 3
-#define INVALID_END_ERROR 4
+#define INVALID_END_ERROR 3
 
 char ch = ' ';
-
 enum
 {
     ERROR,
@@ -24,6 +24,7 @@ enum
     END
 } token;
 
+// Handling Error
 void error(int errNo)
 {
     if (errNo == SEQUENCE_ERROR)
@@ -34,21 +35,17 @@ void error(int errNo)
     }
     else if (errNo == PARENTHESES_ERROR)
         printf(ERROR_TEXT_COLOR "Parentheses Missing\n");
-    else if (errNo == DIVIDE_BY_ZERO_ERROR)
-    {
-        printf("\b");
-        printf(ERROR_TEXT_COLOR "%c\n", ch);
-        printf("Can Not Divide By Zero\n");
-    }
     else if (errNo == INVALID_END_ERROR)
         printf(ERROR_TEXT_COLOR "Not Full Sentence\n");
 
     printf("Wrong Sentence!\n" NORMAL_TEXT_COLOR);
-    exit(0);
+    exit(0); // Exit Program
 }
 
+// Get Token
 void get_token()
 {
+    // Ignore Blank
     do
     {
         ch = getchar();
@@ -94,14 +91,7 @@ void term()
     factor();
     while (token == STAR || token == DIVIDER)
     {
-        if (token == DIVIDER)
-        {
-            get_token();
-            if (ch == '0')
-                error(DIVIDE_BY_ZERO_ERROR);
-        }
-        else
-            get_token();
+        get_token();
         factor();
     }
 }
