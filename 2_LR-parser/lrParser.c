@@ -59,7 +59,7 @@ int yylex()
     int i = 0;
     if (isdigit(ch))
     {
-        char yytext[16];
+        char yytext[32] = {};
         char *tmp;
         do
         {
@@ -127,7 +127,7 @@ void reduce(int i)
     else if (i == 4)
         value[top] = value[old_top + 1];
     else if (i == 5)
-        value[top] = value[old_top + 1];
+        value[top] = value[old_top + 2];
     else if (i == 6)
         value[top] = value[old_top + 1];
     else
