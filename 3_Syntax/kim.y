@@ -1,3 +1,10 @@
+%{
+#define NORMAL_TEXT_COLOR "\x1b[0m"
+#define ERROR_TEXT_COLOR "\x1b[31m"
+
+int line_no = 1;
+%}
+
 %token
 	IDENTIFIER TYPE_IDENTIFIER FLOAT_CONSTANT INTEGER_CONSTANT CHARACTER_CONSTANT STRING_LITERAL
 
@@ -11,7 +18,7 @@
 %start program
 
 %%
-// Program and Declarations
+// Program
 program
 	: translation_unit
 	;
@@ -31,8 +38,16 @@ function_definition
 	;
 
 // Declaration
+declaration_list_opt
+	:
+	| declaration_list
+	;
+declaration_list
+	: declaration
+	| declaration_list declaration
+	;
 declaration
-	: declaration_specifiers init_declarator_list SEMICOLON
+	: declaration_specifiers init_declarator_list_opt SEMICOLON
 	;
 declaration_specifiers
 	: type_specifier
@@ -45,6 +60,10 @@ storage_class_specifier
 	| STATIC_SYM
 	| TYPEDEF_SYM
 	;
+init_declarator_list_opt
+	:
+	| init_declarator_list
+	;
 init_declarator_list
 	: init_declarator
 	| init_declarator_list COMMA init_declarator
@@ -53,12 +72,23 @@ init_declarator
 	: declarator
 	| declarator ASSIGN initializer
 	;
+// Initializer
+initializer
+	: constant_expression
+	| LR initializer_list RR
+	;
+initializer_list
+	: initializer
+	| initializer_list COMMA initializer
+	;
+
+// Type Specifier
 type_specifier
-	: struct_specifier
-	| enum_specifier
+	: struct_type_specifier
+	| enum_type_specifier
 	| TYPE_IDENTIFIER
 	;
-struct_specifier
+struct_type_specifier
 	: struct_or_union IDENTIFIER LR struct_declaration_list RR
 	| struct_or_union LR struct_declaration_list RR
 	| struct_or_union IDENTIFIER
@@ -72,11 +102,7 @@ struct_declaration_list
 	| struct_declaration_list struct_declaration
 	;
 struct_declaration
-	: specifier_qualifier_list struct_declarator_list SEMICOLON
-	;
-specifier_qualifier_list
-	: type_specifier
-	| type_specifier specifier_qualifier_list
+	: type_specifier struct_declarator_list SEMICOLON
 	;
 struct_declarator_list
 	: struct_declarator
@@ -84,10 +110,8 @@ struct_declarator_list
 	;
 struct_declarator
 	: declarator
-	| COLON constant_expression
-	| declarator COLON constant_expression
 	;
-enum_specifier
+enum_type_specifier
 	: ENUM_SYM IDENTIFIER LR enumerator_list RR
 	| ENUM_SYM LR enumerator_list RR
 	| ENUM_SYM IDENTIFIER
@@ -98,7 +122,7 @@ enumerator_list
 	;
 enumerator
 	: IDENTIFIER
-	| IDENTIFIER ASSIGN constant_expression
+	| IDENTIFIER ASSIGN expression
 	;
 
 // Declarator
@@ -115,10 +139,6 @@ direct_declarator
 	| LP declarator RP
 	| direct_declarator LB constant_expression_opt RB
 	| direct_declarator LP parameter_type_list_opt RP
-	;
-constant_expression_opt
-	:
-	| constant_expression
 	;
 parameter_type_list_opt
 	:
@@ -141,30 +161,27 @@ abstract_declarator_opt
 	| abstract_declarator
 	;
 abstract_declarator
-	: pointer
-	| direct_abstract_declarator
+	: direct_abstract_declarator
+	| pointer
 	| pointer direct_abstract_declarator
 	;
 direct_abstract_declarator
 	: LP abstract_declarator RP
 	| LB constant_expression_opt RB
-	| LP parameter_type_list_opt RP
 	| direct_abstract_declarator LB constant_expression_opt RB
+	| LP parameter_type_list_opt RP
 	| direct_abstract_declarator LP parameter_type_list_opt RP
 	;
 
-// Initializer
-initializer
-	: expression
-	| LR initializer_list RR
-	| LR initializer_list COMMA RR
-	;
-initializer_list
-	: initializer
-	| initializer_list COMMA initializer
-	;
-
 // Statement
+statement_list_opt
+	:
+	| statement_list
+	;
+statement_list
+	: statement
+	| statement_list statement
+	;
 statement
 	: labeled_statement
 	| compound_statement
@@ -178,15 +195,7 @@ labeled_statement
 	| DEFAULT_SYM COLON statement
 	;
 compound_statement
-	: LR declaration_list statement_list RR
-	;
-declaration_list
-	:
-	| declaration_list declaration
-	;
-statement_list
-	:
-	| statement_list statement
+	: LR declaration_list_opt statement_list_opt RR
 	;
 expression_statement
 	: SEMICOLON
@@ -200,7 +209,10 @@ selection_statement
 iteration_statement
 	: WHILE_SYM LP expression RP statement
 	| DO_SYM statement WHILE_SYM LP expression RP SEMICOLON
-	| FOR_SYM LP expression_opt SEMICOLON expression_opt SEMICOLON expression_opt RP statement
+	| FOR_SYM LP for_expression RP statement
+	;
+for_expression
+	: expression_opt SEMICOLON expression_opt SEMICOLON expression_opt
 	;
 expression_opt
 	:
@@ -213,23 +225,6 @@ jump_statement
 	;
 
 // Expression
-primary_expression
-	: IDENTIFIER
-	| INTEGER_CONSTANT
-	| FLOAT_CONSTANT
-	| CHARACTER_CONSTANT
-	| STRING_LITERAL
-	| LP expression RP
-	;
-postfix_expression
-	: primary_expression
-	| postfix_expression LB expression RB
-	| postfix_expression LP arg_expression_list_opt RP
-	| postfix_expression PERIOD IDENTIFIER
-	| postfix_expression ARROW IDENTIFIER
-	| postfix_expression PLUSPLUS
-	| postfix_expression MINUSMINUS
-	;
 arg_expression_list_opt
 	:
 	| arg_expression_list
@@ -237,6 +232,73 @@ arg_expression_list_opt
 arg_expression_list
 	: assignment_expression
 	| arg_expression_list COMMA assignment_expression
+	;
+constant_expression_opt
+	:
+	| constant_expression
+	;
+constant_expression
+	: expression
+	;
+expression
+	: comma_expression
+	;
+comma_expression
+	: assignment_expression
+	;
+assignment_expression
+	: conditional_expression
+	| unary_expression ASSIGN assignment_expression
+	;
+conditional_expression
+	: logical_or_expression
+	;
+logical_or_expression
+	: logical_and_expression
+	| logical_or_expression BARBAR logical_and_expression
+	;
+logical_and_expression
+	: bitwise_or_expression
+	| logical_and_expression AMPAMP bitwise_or_expression
+	;
+bitwise_or_expression
+	: bitwise_xor_expression
+	;
+bitwise_xor_expression
+	: bitwise_and_expression
+	;
+bitwise_and_expression
+	: equality_expression
+	;
+equality_expression
+	: relational_expression
+	| equality_expression EQL relational_expression
+	| equality_expression NEQ relational_expression
+	;
+relational_expression
+	: shift_expression
+	| relational_expression LSS shift_expression
+	| relational_expression GTR shift_expression
+	| relational_expression LEQ shift_expression
+	| relational_expression GEQ shift_expression
+	;
+shift_expression
+	: additive_expression
+	;
+additive_expression
+	: multiplicative_expression
+	| additive_expression PLUS multiplicative_expression
+	| additive_expression MINUS multiplicative_expression
+	;
+multiplicative_expression
+	: cast_expression
+	| multiplicative_expression STAR cast_expression
+	| multiplicative_expression SLASH cast_expression
+	| multiplicative_expression PERCENT cast_expression
+	;
+cast_expression
+	: unary_expression
+	| LP type_name RP cast_expression
 	;
 unary_expression
 	: postfix_expression
@@ -250,80 +312,35 @@ unary_expression
 	| SIZEOF_SYM unary_expression
 	| SIZEOF_SYM LP type_name RP
 	;
-cast_expression
-	: unary_expression
-	| LP type_name RP cast_expression
+postfix_expression
+	: primary_expression
+	| postfix_expression LB expression RB
+	| postfix_expression LP arg_expression_list_opt RP
+	| postfix_expression PERIOD IDENTIFIER
+	| postfix_expression ARROW IDENTIFIER
+	| postfix_expression PLUSPLUS
+	| postfix_expression MINUSMINUS
+	;
+primary_expression
+	: IDENTIFIER
+	| INTEGER_CONSTANT
+	| FLOAT_CONSTANT
+	| CHARACTER_CONSTANT
+	| STRING_LITERAL
+	| LP expression RP
 	;
 type_name
 	: declaration_specifiers
 	| declaration_specifiers abstract_declarator
 	;
-multiplicative_expression
-	: cast_expression
-	| multiplicative_expression STAR cast_expression
-	| multiplicative_expression SLASH cast_expression
-	| multiplicative_expression PERCENT cast_expression
-	;
-additive_expression
-	: multiplicative_expression
-	| additive_expression PLUS multiplicative_expression
-	| additive_expression MINUS multiplicative_expression
-	;
-shift_expression
-	: additive_expression
-	;
-relational_expression
-	: shift_expression
-	| relational_expression LSS shift_expression
-	| relational_expression GTR shift_expression
-	| relational_expression LEQ shift_expression
-	| relational_expression GEQ shift_expression
-	;
-equality_expression
-	: relational_expression
-	| equality_expression EQL relational_expression
-	| equality_expression NEQ relational_expression
-	;
-AND_expression
-	: equality_expression
-	| AND_expression AMP equality_expression
-	;
-exclusive_OR_expression
-	: AND_expression
-	;
-inclusive_OR_expression
-	: exclusive_OR_expression
-	;
-logical_AND_expression
-	: inclusive_OR_expression
-	| logical_AND_expression AMPAMP inclusive_OR_expression
-	;
-logical_OR_expression
-	: logical_AND_expression
-	| logical_OR_expression BARBAR logical_AND_expression
-	;
-conditional_expression
-	: logical_OR_expression
-	;
-assignment_expression
-	: conditional_expression
-	| unary_expression ASSIGN assignment_expression
-	;
-expression
-	: assignment_expression
-	| expression COMMA assignment_expression
-	;
-constant_expression
-	: expression
-	;
-
 %%
+
+extern char *yytext;
 
 void main() {
 	yyparse();
-	printf("Completed!!\n");
 }
 
 void yyerror(char *s){
-	printf("Error : %s \n",  s);
+	printf(ERROR_TEXT_COLOR "Line %d: %s near %s \n" NORMAL_TEXT_COLOR,  line_no, s, yytext);
 }

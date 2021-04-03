@@ -6,12 +6,13 @@ ws {delim}+
 
 %{
 #include "y.tab.h"
+extern int line_no;
 int checkIdentifier();
 %}
 
 %%
 {ws} { }
-{line} { }
+{line} { line_no++; }
 auto { return(AUTO_SYM); }
 break { return(BREAK_SYM); }
 case { return(CASE_SYM); }
@@ -74,11 +75,12 @@ while { return(WHILE_SYM); }
 
 int checkIdentifier(char *s){
 	char *table[] = {"int", "float", "char", "void"};
-	if (strcmp(s, "int") == 0 || strcmp(s, "float") == 0 || strcmp(s, "char") == 0 || strcmp(s, "void") == 0) {
-		return TYPE_IDENTIFIER;
-	} else {
-		return IDENTIFIER;
+	for(int i=0; i<4; i++) {
+		if(!strcmp(s, table[i])) {
+			return TYPE_IDENTIFIER;
+		}
 	}
+	return IDENTIFIER;
 }
 
 int yywrap() {
