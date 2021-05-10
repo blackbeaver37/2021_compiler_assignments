@@ -5,15 +5,13 @@ line [\n]
 ws {delim}+
 
 %{
+#define YYSTYPE_IS_DECLARED 1
+typedef long YYSTYPE;
+
 #include <string.h>
 #include "y.tab.h"
 #include "type.h"
 
-#define YYSTYPE_IS_DECLARED 1
-
-typedef long YYSTYPE
-
-extern YYSTYPE yylval;
 extern int line_no;
 extern A_ID *current_id;
 char *makeString();

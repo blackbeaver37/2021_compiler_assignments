@@ -1,16 +1,17 @@
 %{
-#include "type.h"
-#include "functions.h"
 
 #define YYSTYPE_IS_DECLARED 1
+typedef long YYSTYPE;
 
-typedef long YYSTYPE
+#include "type.h"
 
 extern int line_no, syntax_err;
 extern A_NODE *root;
 extern A_ID *current_id;
 extern int current_level;
 extern A_TYPE *int_type;
+
+
 %}
 
 %start program
@@ -177,7 +178,7 @@ direct_abstract_declarator
 	| LB constant_expression_opt RB {$$ = setTypeExpr(makeType(T_ARRAY), $2);}
 	| direct_abstract_declarator LB constant_expression_opt RB {$$ = setTypeElementType($1, setTypeExpr(makeType(T_ARRAY), $3));}
 	| LP parameter_type_list_opt RP {$$ = setTypeExpr(makeType(T_FUNC), $2);}
-	| direct_abstract_declarator LP parameter_type_list_opt RP {$$ = setTypeElementType($1, setTypeExpr(makeType(T_FUCN), $3));}
+	| direct_abstract_declarator LP parameter_type_list_opt RP {$$ = setTypeElementType($1, setTypeExpr(makeType(T_FUNC), $3));}
 	;
 
 // Statement
@@ -210,7 +211,7 @@ expression_statement
 	;
 selection_statement
 	: IF_SYM LP expression RP statement {$$ = makeNode(N_STMT_IF, $3, NIL, $5);}
-	| IF_SYM LP expression RP statement ELSE_SYM statement {$$ = makeNode(N_STMT_IF_ELES, $3, $5, $7);}
+	| IF_SYM LP expression RP statement ELSE_SYM statement {$$ = makeNode(N_STMT_IF_ELSE, $3, $5, $7);}
 	| SWITCH_SYM LP expression RP statement {$$ = makeNode(N_STMT_SWITCH, $3, NIL, $5);}
 	;
 iteration_statement
@@ -227,7 +228,7 @@ expression_opt
 	;
 jump_statement
 	: RETURN_SYM expression_opt SEMICOLON {$$ = makeNode(N_STMT_RETURN, NIL, $2, NIL);}
-	| CONTINUE_SYM SEMICOLON {$$ = makeNode(N_STMT_COUNTINUE, NIL, NIL, NIL);}
+	| CONTINUE_SYM SEMICOLON {$$ = makeNode(N_STMT_CONTINUE, NIL, NIL, NIL);}
 	| BREAK_SYM SEMICOLON {$$ = makeNode(N_STMT_BREAK, NIL, NIL, NIL);}
 	;
 
@@ -280,7 +281,7 @@ bitwise_and_expression
 equality_expression
 	: relational_expression {$$ = $1;}
 	| equality_expression EQL relational_expression {$$ = makeNode(N_EXP_EQL, $1, NIL, $3);}
-	| equality_expression NEQ relational_expression {$$ = makeNode(N_EXP_NEQn $1, NIL, $3);}
+	| equality_expression NEQ relational_expression {$$ = makeNode(N_EXP_NEQ, $1, NIL, $3);}
 	;
 relational_expression
 	: shift_expression {$$ = $1;}
@@ -333,15 +334,10 @@ primary_expression
 	| INTEGER_CONSTANT {$$ = makeNode(N_EXP_INT_CONST, NIL, $1, NIL);}
 	| FLOAT_CONSTANT {$$ = makeNode(N_EXP_FLOAT_CONST, NIL, $1, NIL);}
 	| CHARACTER_CONSTANT {$$ = makeNode(N_EXP_CHAR_CONST, NIL, $1, NIL);}
-	| STRING_LITERAL {$$ = makeNode(N_EXP_STRING_CONST, NIL, $1, NIL);}
+	| STRING_LITERAL {$$ = makeNode(N_EXP_STRING_LITERAL, NIL, $1, NIL);}
 	| LP expression RP {$$ = $2;}
 	;
 type_name
 	: declaration_specifiers abstract_declarator_opt {$$ = setTypeNameSpecifier($2, $1);}
 	;
 %%
-
-void main() {
-	initialize();
-	yyparse();
-}

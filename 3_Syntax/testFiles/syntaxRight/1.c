@@ -1,7 +1,10 @@
-int a;
-int a;
-
-float int b;
-float float float c;
-
-char *s[]();
+int main()
+{
+    int a, b;
+    a = 10;
+    b = 1;
+    for (int i = 0; i < 10; i++)
+    {
+        a = a + b;
+    }
+}

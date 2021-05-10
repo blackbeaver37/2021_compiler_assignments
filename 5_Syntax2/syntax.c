@@ -47,7 +47,7 @@ A_TYPE *setTypeStructOrEnumIdentifier(T_KIND, char *, ID_KIND);
 BOOLEAN isNotSameFormalParameters(A_ID *, A_ID *);
 BOOLEAN isNotSameType(A_TYPE *, A_TYPE *);
 BOOLEAN isPointerOrArrayType(A_TYPE *);
-void syntax_error();
+void syntax_error(int, char *);
 void initialize();
 
 // make new node for syntax tree
@@ -210,7 +210,7 @@ A_SPECIFIER *updateSpecifier(A_SPECIFIER *p, A_TYPE *t, S_KIND s)
             if (p->type == t)
                 ;
             else
-                syntax_error(24);
+                syntax_error(24, "");
         }
         else
             p->type = t;
@@ -222,7 +222,7 @@ A_SPECIFIER *updateSpecifier(A_SPECIFIER *p, A_TYPE *t, S_KIND s)
             if (s == p->stor)
                 ;
             else
-                syntax_error(24);
+                syntax_error(24, "");
         }
         else
             p->stor = s;
@@ -328,12 +328,12 @@ A_ID *setFunctionDeclaratorSpecifier(A_ID *id, A_SPECIFIER *p)
     A_ID *a;
     // check storage class
     if (p->stor)
-        syntax_error(25);
+        syntax_error(25, "");
     setDefaultSpecifier(p);
     // check function identifier immediately before '('
     if (id->type->kind != T_FUNC)
     {
-        syntax_error(21);
+        syntax_error(21, "");
         return (id);
     }
     else
@@ -354,18 +354,18 @@ A_ID *setFunctionDeclaratorSpecifier(A_ID *id, A_SPECIFIER *p)
             if (isNotSameType(a->type->element_type, id->type->element_type))
                 syntax_error(26, a->name);
         }
-        // change parameter scope and check empty name
-        a = id->type->field;
-        while (a)
-        {
-            if (strlen(a->name))
-                current_id = a;
-            else if (a->type)
-                syntax_error(23);
-            a = a->link;
-        }
-        return (id);
     }
+    // change parameter scope and check empty name
+    a = id->type->field;
+    while (a)
+    {
+        if (strlen(a->name))
+            current_id = a;
+        else if (a->type)
+            syntax_error(23, "");
+        a = a->link;
+    }
+    return (id);
 }
 A_ID *setFunctionDeclaratorBody(A_ID *id, A_NODE *n)
 {
@@ -406,7 +406,7 @@ A_ID *setParameterDeclaratorSpecifier(A_ID *id, A_SPECIFIER *p)
         syntax_error(12, id->name);
     // check parameter storage class && void type
     if (p->stor || p->type == void_type)
-        syntax_error(14);
+        syntax_error(14, "");
     setDefaultSpecifier(p);
     id = setDeclaratorElementType(id, p->type);
     id->kind = ID_PARM;
@@ -432,7 +432,7 @@ A_TYPE *setTypeNameSpecifier(A_TYPE *t, A_SPECIFIER *p)
 {
     // check storage class in type name
     if (p->stor)
-        syntax_error(20);
+        syntax_error(20, "");
     setDefaultSpecifier(p);
     t = setTypeElementType(t, p->type);
     return (t);
@@ -519,6 +519,13 @@ BOOLEAN isNotSameFormalParameters(A_ID *a, A_ID *b)
     else
         return (FALSE);
 }
+BOOLEAN isPointerOrArrayType(A_TYPE *t)
+{
+    if (t && (t->kind == T_POINTER || t->kind == T_ARRAY))
+        return (TRUE);
+    else
+        return (FALSE);
+}
 BOOLEAN isNotSameType(A_TYPE *t1, A_TYPE *t2)
 {
     if (isPointerOrArrayType(t1) || isPointerOrArrayType(t2))
@@ -552,7 +559,7 @@ void initialize()
         makeIdentifier("scanf"), setTypeField(setTypeElementType(makeType(T_FUNC), void_type), linkDeclaratorList(setDeclaratorTypeAndKind(makeDummyIdentifier(), string_type, ID_PARM), setDeclaratorKind(makeDummyIdentifier(), ID_PARM))), ID_FUNC);
     // malloc(int) libarary function
     setDeclaratorTypeAndKind(
-        makeIdentifier("scanf"), setTypeField(setTypeElementType(makeType(T_FUNC), string_type), setDeclaratorTypeAndKind(makeDummyIdentifier(), int_type, ID_PARM)), ID_FUNC);
+        makeIdentifier("malloc"), setTypeField(setTypeElementType(makeType(T_FUNC), string_type), setDeclaratorTypeAndKind(makeDummyIdentifier(), int_type, ID_PARM)), ID_FUNC);
 }
 void syntax_error(int i, char *s)
 {
@@ -607,7 +614,5 @@ void syntax_error(int i, char *s)
     if (strlen(yytext) == 0)
         printf(" at end\n" NORMAL_TEXT_COLOR);
     else
-        printf(" near %n\n" NORMAL_TEXT_COLOR, yytext);
+        printf(" near %s\n" NORMAL_TEXT_COLOR, yytext);
 }
-
-BOOLEAN isPointerOrArrayType(A_TYPE *);
