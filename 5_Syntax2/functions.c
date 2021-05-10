@@ -4,6 +4,9 @@
 #include "type.h"
 #include "y.tab.h"
 
+#define NORMAL_TEXT_COLOR "\x1b[0m"
+#define ERROR_TEXT_COLOR "\x1b[31m"
+
 extern char *yytext;
 A_TYPE *int_type, *char_type, *void_type, *float_type, *string_type;
 A_NODE *root;
@@ -554,7 +557,7 @@ void initialize()
 void syntax_error(int i, char *s)
 {
     syntax_err++;
-    printf("line %d: syntax error: ", line_no);
+    printf(ERROR_TEXT_COLOR "line %d: syntax error: ", line_no);
     switch (i)
     {
     case 11:
@@ -602,9 +605,9 @@ void syntax_error(int i, char *s)
     }
 
     if (strlen(yytext) == 0)
-        printf(" at end\n");
+        printf(" at end\n" NORMAL_TEXT_COLOR);
     else
-        printf(" near %n\n", yytext);
+        printf(" near %n\n" NORMAL_TEXT_COLOR, yytext);
 }
 
 BOOLEAN isPointerOrArrayType(A_TYPE *);

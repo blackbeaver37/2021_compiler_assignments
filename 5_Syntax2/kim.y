@@ -1,8 +1,7 @@
 %{
 #include "type.h"
+#include "functions.h"
 
-#define NORMAL_TEXT_COLOR "\x1b[0m"
-#define ERROR_TEXT_COLOR "\x1b[31m"
 #define YYSTYPE_IS_DECLARED 1
 
 typedef long YYSTYPE
@@ -342,12 +341,7 @@ type_name
 	;
 %%
 
-extern char *yytext;
-
-void yyerror(char *s){
-	printf(ERROR_TEXT_COLOR "Line %d: %s near %s \n" NORMAL_TEXT_COLOR,  line_no, s, yytext);
-}
-
 void main() {
+	initialize();
 	yyparse();
 }
