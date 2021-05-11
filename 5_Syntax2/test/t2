@@ -1,6 +1,12 @@
-int a;
-float b;
-struct s {
-	int id;
-	char *name;
-} st;
+int a, b;
+int plus(int, int);
+int main() {
+	int c;
+	a = 1;
+	b = plus(2, 3);
+	c = plus(a, b);
+}
+int plus(int n1, int n2) {
+	return n1 + n2;
+}
+

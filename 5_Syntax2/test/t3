@@ -1,1 +1,11 @@
-float main(int a) {a=10;}
+struct schema {
+	int id;
+	char *name;
+	char *date;
+} *person;
+int main() {
+	person->id = 0;
+	person->name = "NAME";
+	person->date = "21.05.12";
+}
+

@@ -1,0 +1,10 @@
+float func(int a, int b, float c) {
+	float ret;
+	int tmp;
+	tmp = ++a + b++;
+	ret = (float)tmp + ret;
+	return ret;
+}
+
+
+	
