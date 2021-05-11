@@ -234,7 +234,7 @@ A_SPECIFIER *updateSpecifier(A_SPECIFIER *p, A_TYPE *t, S_KIND s)
 A_ID *linkDeclaratorList(A_ID *id1, A_ID *id2)
 {
     A_ID *m = id1;
-    if (id1 = NIL)
+    if (id1 == NIL)
         return (id2);
     while (m->link)
         m = m->link;

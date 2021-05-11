@@ -1,0 +1,6 @@
+int a;
+float b;
+struct s {
+	int id;
+	char *name;
+} st;
