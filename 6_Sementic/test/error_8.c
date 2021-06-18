@@ -15,6 +15,4 @@ int main(int argc, int argv[])
         // Error No : 84
         int func();
     } st;
-
-    int arr[1]();
 }
