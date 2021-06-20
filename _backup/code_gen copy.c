@@ -169,6 +169,12 @@ void gen_expression(A_NODE *node)
                 else
                     gen_code_i(LOD, id->level, id->address);
                 break;
+            case T_STRUCT:
+            case T_UNION:
+                gen_code_i(LDA, id->level, id->address);
+                i = id->type->size;
+                gen_code_i(LDI, 0, i % 4 ? i / 4 + 1 : i / 4);
+                break;
             default:
                 gen_error(11, id->line, "");
                 break;
@@ -232,6 +238,24 @@ void gen_expression(A_NODE *node)
             gen_code_i(INT, 0, i);
         gen_expression(node->llink);
         gen_code_i(CAL, 0, 0);
+        break;
+
+    case N_EXP_STRUCT:
+        gen_expression_left(node->llink);
+        id = node->rlink;
+        if (id->address > 0)
+        {
+            gen_code_i(LITI, 0, id->address);
+            gen_code_i(OFFSET, 0, 0);
+        }
+        if (!isArrayType(node->type))
+        {
+            i = node->type->size;
+            if (i == 1)
+                gen_code_i(LDIB, 0, 0);
+            else
+                gen_code_i(LDI, 0, i % 4 ? i / 4 + 1 : i / 4);
+        }
         break;
 
     case N_EXP_ARROW:
@@ -548,6 +572,8 @@ void gen_expression_left(A_NODE *node)
             {
             case T_ENUM:
             case T_POINTER:
+            case T_STRUCT:
+            case T_UNION:
                 gen_code_i(LDA, id->level, id->address);
                 break;
             case T_ARRAY:
@@ -579,6 +605,16 @@ void gen_expression_left(A_NODE *node)
             gen_code_i(MULI, 0, 0);
         }
         gen_code_i(OFFSET, 0, 0);
+        break;
+
+    case N_EXP_STRUCT:
+        gen_expression_left(node->llink);
+        id = node->rlink;
+        if (id->address > 0)
+        {
+            gen_code_i(LITI, 0, id->address);
+            gen_code_i(OFFSET, 0, 0);
+        }
         break;
 
     case N_EXP_ARROW:
@@ -662,6 +698,8 @@ void gen_statement(A_NODE *node, int cont_label, int break_label)
     int i, l1, l2, l3;
     switch (node->name)
     {
+    case N_STMT_LABEL_CASE:
+    case N_STMT_LABEL_DEFAULT:
     case N_STMT_COMPOUND:
         if (node->llink)
             gen_declaration_list(node->llink);
@@ -691,6 +729,8 @@ void gen_statement(A_NODE *node, int cont_label, int break_label)
         gen_statement(node->rlink, cont_label, break_label);
         gen_label_number(l2);
         break;
+    case N_STMT_SWITCH:
+    //	not implemented break;
     case N_STMT_WHILE:
         l3 = get_label();
         gen_label_number(l1 = get_label());
@@ -833,6 +873,7 @@ void gen_declaration(A_ID *id)
     case ID_PARM:
     case ID_TYPE:
     case ID_ENUM:
+    case ID_STRUCT:
     case ID_FIELD:
     case ID_ENUM_LITERAL:
     case ID_NULL:
